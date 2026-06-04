@@ -1,8 +1,3 @@
-<?php 
-    $name = isset($_GET['product_name']) ? htmlspecialchars($_GET['product_name']) : '1-Tages-Vignette';
-    $price = isset($_GET['product_price']) ? floatval($_GET['product_price']) : 9.60;
-    $variantCode = isset($_GET['VariantCode']) ? htmlspecialchars($_GET['VariantCode']) : 'B26S';
-?>
 <html class="no-js scroll-padding " lang="de" data-currentlanguage="de" id="html"><head>
     <title>Warenkorb | offizieller ASFINAG-Mautshop</title>
     <meta charset="utf-8">
@@ -104,7 +99,7 @@ table {
                                 </li>
                         <li>
                        <li>
-                            <a aria-label="1 Produkt(e) im Warenkorb" class="btn rounded-circle p-0 ms-2 ms-lg-4 position-relative btn-primary" href="/de/produktkauf/warenkorb/" id="HeaderPartialViewModel_CartLink" title="Warenkorb: 1 Produkt hinzugefügt"><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-blue">1</span><i aria-hidden="true" class="asf-shopping-cart"></i></a>
+                            <a aria-label="Warenkorb ist leer" class="btn rounded-circle p-0 ms-2 ms-lg-4 position-relative btn-outline-secondary" href="/de/produktkauf/warenkorb/" id="HeaderPartialViewModel_CartLink" title="Warenkorb"><i aria-hidden="true" class="asf-shopping-cart"></i></a>
                         </li>
                         <li>
                             
@@ -265,47 +260,16 @@ table {
 
             <div class="row">
                 <div class="col-12 col-lg-5 offset-lg-1">
-                    <h2 class="color-asf-red d-flex align-items-center mt-3 fz-1-5">        <div class="product-image">
+                    <h2 class="color-asf-red d-flex align-items-center mt-3 fz-1-5"><div class="product-image">
             <img alt="" src="/globalassets/migration-uploaded/vignette.svg">
-        </div>
-Digitale Vignette</h2>    <ul class="list-group">
-
-<li class="list-group-item border-top rounded-top">
-    <div class="row d-flex align-items-center">
-        <div class="col-6 col-md-7">
-            <div class="fw-600 m-0 h6 text-black lh-base"><?php echo $name; ?></div>
-            <div class="text-small"></div>
-        </div>
-
-        <div class="col-4 col-md-3 fw-600">
-            <div class="d-flex justify-content-between">
-                <div class="d-flex">
-                    <span class="sr-only">für Auto</span>
-
-                    
-                </div>
-                    <div class="d-flex">€&nbsp;<?php echo number_format($price, 2, ',', '.'); ?></div>
-            </div>
-        </div>
-        <div class="col-2 d-flex justify-content-end p-0">
-            
-
-<form action="/de/produktkauf/warenkorb/DeleteItem/" method="post"><input name="__RequestVerificationToken" type="hidden" value="9Lslo4hUzRNKAWeURuOuPGJMKIk01Cxhc18Zn-3FI5Q8WIqY6JiXRgvPrndJrl0fOBqJ3XOYcytW4w-D79Lm0C9pWjhnkpd4kjhWO50E2IA1"><input id="CartProductPartialViewModel_cartProductViewModel_ProductPartialViewModels_0__DeleteCartItemPartialFormViewModel_LineItemId" name="LineItemId" type="hidden" value="-1">
-<input id="CartProductPartialViewModel_cartProductViewModel_ProductPartialViewModels_0__DeleteCartItemPartialFormViewModel_VehicleType" name="VehicleType" type="hidden" value="Car">
-<input type="hidden" name="product_name" value="<?php echo $name; ?>">
-<input type="hidden" name="product_price" value="<?php echo $price; ?>">
-<input type="hidden" name="VariantCode" value="<?php echo $variantCode; ?>">
-<button style="top: 8px;position: relative;" aria-label="Entfernen" class="btn btn-outline-secondary btn-icon p-0 mx-1" id="CartProductPartialViewModel_cartProductViewModel_ProductPartialViewModels_0__DeleteCartItemPartialFormViewModel_DeleteButton" title="Entfernen" type="submit"><i aria-hidden="true" class="asf-trash m-2"></i></button>
-</form>        </div>
-    </div>
-</li>    </ul>
-
+        </div>Digitale Vignette</h2>
+                    <ul class="list-group" id="cart-items-list"></ul>
+                    <div class="mt-3" id="cart-empty-message" style="display:none;">Ihr Warenkorb ist leer.</div>
                 </div>
                 <div class="col-12 col-lg-5 justify-content-end d-flex">
-                    
 <div class="d-flex align-items-center align-self-end justify-content-end fw-600">
      Gesamtsumme inkl. USt.
-    <b class="ms-2 fz-1-25">€&nbsp;<?php echo number_format($price, 2, ',', '.'); ?></b>
+    <b class="ms-2 fz-1-25">€&nbsp;<span id="cart-total-value">0,00</span></b>
 </div>
                 </div>
             </div>
@@ -446,6 +410,116 @@ Ms20.SessionModal.init("MasterPageDialogsPartialViewModel_AnonymousSessionTimeou
 MatomoControl.init({"matomoPhp":"https://analytics.asfinag.at/matomo.php","matomoJs":"https://analytics.asfinag.at/matomo.js","matomoSiteId":"9","matomoBaseUrl":"https://analytics.asfinag.at/","containerIds":null}, 'lVhvIUj8N/VIHciei66B5JeX4a6mT+MiN1EPjIy1S/o=');
 MatomoControl.loadContainers();
 
+                const cartKey = "asfinagCart";
+                const cartLink = document.getElementById("HeaderPartialViewModel_CartLink");
+                const cartItemsList = document.getElementById("cart-items-list");
+                const cartTotalValue = document.getElementById("cart-total-value");
+                const cartEmptyMessage = document.getElementById("cart-empty-message");
+                const nextLink = document.getElementById("NextLink");
+
+                const safeParse = (value) => {
+                    if (!value) return [];
+                    try {
+                        const parsed = JSON.parse(value);
+                        return Array.isArray(parsed) ? parsed : [];
+                    } catch (error) {
+                        return [];
+                    }
+                };
+
+                const getCart = () => safeParse(localStorage.getItem(cartKey));
+
+                const saveCart = (cartItems) => {
+                    localStorage.setItem(cartKey, JSON.stringify(cartItems));
+                };
+
+                const formatPrice = (value) => Number(value || 0).toFixed(2).replace(".", ",");
+                const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    "\"": "&quot;",
+                    "'": "&#39;"
+                }[char]));
+
+                const updateCartBadge = (cartItems) => {
+                    if (!cartLink) return;
+                    const count = cartItems.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+                    const existingBadge = cartLink.querySelector(".badge");
+
+                    if (count > 0) {
+                        cartLink.classList.remove("btn-outline-secondary");
+                        cartLink.classList.add("btn-primary");
+                        cartLink.setAttribute("aria-label", `${count} Produkt(e) im Warenkorb`);
+                        cartLink.setAttribute("title", `Warenkorb: ${count} Produkt hinzugefügt`);
+
+                        if (existingBadge) {
+                            existingBadge.textContent = String(count);
+                        } else {
+                            const badge = document.createElement("span");
+                            badge.className = "position-absolute top-0 start-100 translate-middle badge rounded-pill bg-blue";
+                            badge.textContent = String(count);
+                            cartLink.prepend(badge);
+                        }
+                    } else {
+                        cartLink.classList.remove("btn-primary");
+                        cartLink.classList.add("btn-outline-secondary");
+                        cartLink.setAttribute("aria-label", "Warenkorb ist leer");
+                        cartLink.setAttribute("title", "Warenkorb");
+                        if (existingBadge) existingBadge.remove();
+                    }
+                };
+
+                const renderCart = () => {
+                    const cartItems = getCart();
+                    cartItemsList.innerHTML = "";
+
+                    let total = 0;
+                    cartItems.forEach((item, index) => {
+                        const quantity = Number(item.quantity) || 1;
+                        const price = Number(item.price) || 0;
+                        const lineTotal = price * quantity;
+                        total += lineTotal;
+
+                        const listItem = document.createElement("li");
+                        listItem.className = "list-group-item border-top rounded-top";
+                        listItem.innerHTML = `
+    <div class="row d-flex align-items-center">
+        <div class="col-6 col-md-7">
+            <div class="fw-600 m-0 h6 text-black lh-base">${escapeHtml(item.name || "Produkt")}</div>
+            <div class="text-small">Menge: ${quantity}</div>
+        </div>
+        <div class="col-4 col-md-3 fw-600">
+            <div class="d-flex justify-content-between">
+                <div class="d-flex">€&nbsp;${formatPrice(lineTotal)}</div>
+            </div>
+        </div>
+        <div class="col-2 d-flex justify-content-end p-0">
+            <button style="top: 8px;position: relative;" aria-label="Entfernen" class="btn btn-outline-secondary btn-icon p-0 mx-1 js-remove-cart-item" title="Entfernen" type="button" data-index="${index}"><i aria-hidden="true" class="asf-trash m-2"></i></button>
+        </div>
+    </div>`;
+                        cartItemsList.appendChild(listItem);
+                    });
+
+                    cartTotalValue.textContent = formatPrice(total);
+                    cartEmptyMessage.style.display = cartItems.length ? "none" : "block";
+                    if (nextLink) nextLink.style.display = cartItems.length ? "" : "none";
+                    updateCartBadge(cartItems);
+                };
+
+                cartItemsList.addEventListener("click", (event) => {
+                    const removeButton = event.target.closest(".js-remove-cart-item");
+                    if (!removeButton) return;
+                    const index = Number(removeButton.dataset.index);
+                    const cartItems = getCart();
+                    if (Number.isNaN(index) || index < 0 || index >= cartItems.length) return;
+
+                    cartItems.splice(index, 1);
+                    saveCart(cartItems);
+                    renderCart();
+                });
+
+                renderCart();
                 Ms20.init();
             });
     </script>
