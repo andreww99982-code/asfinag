@@ -261,7 +261,7 @@ table {
             <div class="row">
                 <div class="col-12 col-lg-5 offset-lg-1">
                     <h2 class="color-asf-red d-flex align-items-center mt-3 fz-1-5"><span class="product-image">
-            <img alt="" src="/globalassets/migration-uploaded/vignette.svg">
+            <img alt="Digitale Vignette Symbol" src="/globalassets/migration-uploaded/vignette.svg">
         </span>Digitale Vignette</h2>
                     <ul class="list-group" id="cart-items-list"></ul>
                     <div class="mt-3" id="cart-empty-message" style="display:none;">Ihr Warenkorb ist leer.</div>
