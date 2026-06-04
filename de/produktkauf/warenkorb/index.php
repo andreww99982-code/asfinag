@@ -433,7 +433,11 @@ MatomoControl.loadContainers();
                     localStorage.setItem(cartKey, JSON.stringify(cartItems));
                 };
 
-                const formatPrice = (value) => Number(value || 0).toFixed(2).replace(".", ",");
+                const formatPrice = (value) => {
+                    const numericValue = Number(value);
+                    const safeValue = Number.isFinite(numericValue) ? numericValue : 0;
+                    return safeValue.toFixed(2).replace(".", ",");
+                };
                 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
                     "&": "&amp;",
                     "<": "&lt;",

@@ -437,6 +437,10 @@ MatomoControl.loadContainers();
                 const saveCart = (cartItems) => {
                     localStorage.setItem(cartKey, JSON.stringify(cartItems));
                 };
+                const normalizePrice = (value) => {
+                    const numericValue = Number(value);
+                    return Number.isFinite(numericValue) ? numericValue.toFixed(2) : "0.00";
+                };
 
                 const updateCartBadge = () => {
                     if (!cartLink) return;
@@ -469,7 +473,8 @@ MatomoControl.loadContainers();
 
                 const showCartModal = (name, price) => {
                     if (!cartModal || !cartModalText) return;
-                    cartModalText.textContent = `${name} (€ ${price.toFixed(2).replace(".", ",")}) wurde zum Warenkorb hinzugefügt.`;
+                    const formattedPrice = normalizePrice(price).replace(".", ",");
+                    cartModalText.textContent = `${name} (€ ${formattedPrice}) wurde zum Warenkorb hinzugefügt.`;
                     if (typeof cartModal.showModal === "function") {
                         cartModal.showModal();
                     }
@@ -487,11 +492,12 @@ MatomoControl.loadContainers();
                         const name = button.dataset.productName || "Produkt";
                         const price = Number(button.dataset.productPrice || "0");
                         const variantCode = button.dataset.variantCode || "";
+                        const normalizedPrice = normalizePrice(price);
 
                         const cartItems = getCart();
                         const existingItem = cartItems.find((item) => {
                             if (variantCode && item.variantCode) return item.variantCode === variantCode;
-                            return item.name === name && item.price === price;
+                            return item.name === name && normalizePrice(item.price) === normalizedPrice;
                         });
                         if (existingItem) {
                             existingItem.quantity = (Number(existingItem.quantity) || 0) + 1;
