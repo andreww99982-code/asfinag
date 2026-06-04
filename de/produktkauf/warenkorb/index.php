@@ -439,7 +439,7 @@ MatomoControl.loadContainers();
 
                 const normalizePrice = (value) => {
                     const numericValue = Number(value);
-                    return Number.isFinite(numericValue) ? Number(numericValue.toFixed(2)) : 0;
+                    return Number.isFinite(numericValue) ? numericValue.toFixed(2) : "0.00";
                 };
 
                 const normalizeCart = (cartItems) => {
@@ -453,10 +453,11 @@ MatomoControl.loadContainers();
                         const numericPrice = Number(item.price);
                         if (!name || !Number.isFinite(numericPrice) || numericPrice < 0) return;
 
-                        const price = normalizePrice(numericPrice);
+                        const normalizedPrice = normalizePrice(numericPrice);
+                        const price = Number(normalizedPrice);
                         const variantCode = String(item.variantCode || "").trim();
                         const quantity = Math.min(maxCartItemQuantity, Math.max(1, Math.trunc(Number(item.quantity) || 1)));
-                        const key = variantCode ? `variant:${variantCode}` : `product:${name}|${price}`;
+                        const key = variantCode ? `variant:${variantCode}` : `product:${name}|${normalizedPrice}`;
                         const existingItem = normalizedItems.get(key);
 
                         if (existingItem) {
