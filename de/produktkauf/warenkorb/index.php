@@ -431,6 +431,12 @@ MatomoControl.loadContainers();
                     }
                 };
 
+                const formatPrice = (value) => {
+                    const numericValue = Number(value);
+                    const safeValue = Number.isFinite(numericValue) ? numericValue : 0;
+                    return safeValue.toFixed(2).replace(".", ",");
+                };
+
                 const normalizeCart = (cartItems) => {
                     if (!Array.isArray(cartItems)) return [];
 
@@ -445,7 +451,7 @@ MatomoControl.loadContainers();
                         const price = Number(formatPrice(numericPrice).replace(",", "."));
                         const variantCode = String(item.variantCode || "").trim();
                         const quantity = Math.min(maxCartItemQuantity, Math.max(1, Math.trunc(Number(item.quantity) || 1)));
-                        const key = variantCode ? `variant:${variantCode}` : `product:${name}|${formatPrice(price)}`;
+                        const key = variantCode ? `variant:${variantCode}` : `product:${name}|${price}`;
                         const existingItem = normalizedItems.get(key);
 
                         if (existingItem) {
@@ -472,6 +478,7 @@ MatomoControl.loadContainers();
                     try {
                         localStorage.setItem(cartKey, value);
                     } catch (error) {
+                        // Ignore storage write failures so the page stays responsive.
                     }
                 };
 
@@ -498,11 +505,6 @@ MatomoControl.loadContainers();
                     writeCartStorage(JSON.stringify(normalizeCart(cartItems)));
                 };
 
-                const formatPrice = (value) => {
-                    const numericValue = Number(value);
-                    const safeValue = Number.isFinite(numericValue) ? numericValue : 0;
-                    return safeValue.toFixed(2).replace(".", ",");
-                };
                 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
                     "&": "&amp;",
                     "<": "&lt;",

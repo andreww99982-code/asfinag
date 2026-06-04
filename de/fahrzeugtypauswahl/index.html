@@ -450,7 +450,7 @@ MatomoControl.loadContainers();
                         const price = Number(normalizePrice(numericPrice));
                         const variantCode = String(item.variantCode || "").trim();
                         const quantity = Math.min(maxCartItemQuantity, Math.max(1, Math.trunc(Number(item.quantity) || 1)));
-                        const key = variantCode ? `variant:${variantCode}` : `product:${name}|${normalizePrice(price)}`;
+                        const key = variantCode ? `variant:${variantCode}` : `product:${name}|${price}`;
                         const existingItem = normalizedItems.get(key);
 
                         if (existingItem) {
@@ -477,6 +477,7 @@ MatomoControl.loadContainers();
                     try {
                         localStorage.setItem(cartKey, value);
                     } catch (error) {
+                        // Ignore storage write failures so the page stays responsive.
                     }
                 };
 
