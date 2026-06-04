@@ -436,6 +436,11 @@ MatomoControl.loadContainers();
                     }
                 };
 
+                const normalizePrice = (value) => {
+                    const numericValue = Number(value);
+                    return Number.isFinite(numericValue) ? numericValue.toFixed(2) : "0.00";
+                };
+
                 const normalizeCart = (cartItems) => {
                     if (!Array.isArray(cartItems)) return [];
 
@@ -502,10 +507,6 @@ MatomoControl.loadContainers();
 
                 const saveCart = (cartItems) => {
                     writeCartStorage(JSON.stringify(normalizeCart(cartItems)));
-                };
-                const normalizePrice = (value) => {
-                    const numericValue = Number(value);
-                    return Number.isFinite(numericValue) ? numericValue.toFixed(2) : "0.00";
                 };
 
                 const updateCartBadge = () => {

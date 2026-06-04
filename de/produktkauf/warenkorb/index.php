@@ -437,6 +437,11 @@ MatomoControl.loadContainers();
                     return safeValue.toFixed(2).replace(".", ",");
                 };
 
+                const normalizePrice = (value) => {
+                    const numericValue = Number(value);
+                    return Number.isFinite(numericValue) ? Number(numericValue.toFixed(2)) : 0;
+                };
+
                 const normalizeCart = (cartItems) => {
                     if (!Array.isArray(cartItems)) return [];
 
@@ -448,7 +453,7 @@ MatomoControl.loadContainers();
                         const numericPrice = Number(item.price);
                         if (!name || !Number.isFinite(numericPrice) || numericPrice < 0) return;
 
-                        const price = Number(formatPrice(numericPrice).replace(",", "."));
+                        const price = normalizePrice(numericPrice);
                         const variantCode = String(item.variantCode || "").trim();
                         const quantity = Math.min(maxCartItemQuantity, Math.max(1, Math.trunc(Number(item.quantity) || 1)));
                         const key = variantCode ? `variant:${variantCode}` : `product:${name}|${price}`;
