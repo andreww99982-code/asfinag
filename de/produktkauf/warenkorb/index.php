@@ -411,6 +411,9 @@ MatomoControl.init({"matomoPhp":"https://analytics.asfinag.at/matomo.php","matom
 MatomoControl.loadContainers();
 
                 const cartKey = "asfinagCart";
+                const maxCartStorageLength = 20000;
+                const maxCartItems = 50;
+                const maxCartItemQuantity = 99;
                 const cartLink = document.getElementById("HeaderPartialViewModel_CartLink");
                 const cartItemsList = document.getElementById("cart-items-list");
                 const cartTotalValue = document.getElementById("cart-total-value");
@@ -419,18 +422,13 @@ MatomoControl.loadContainers();
 
                 const safeParse = (value) => {
                     if (!value) return [];
+                    if (value.length > maxCartStorageLength) return null;
                     try {
                         const parsed = JSON.parse(value);
-                        return Array.isArray(parsed) ? parsed : [];
+                        return Array.isArray(parsed) ? parsed : null;
                     } catch (error) {
-                        return [];
+                        return null;
                     }
-                };
-
-                const getCart = () => safeParse(localStorage.getItem(cartKey));
-
-                const saveCart = (cartItems) => {
-                    localStorage.setItem(cartKey, JSON.stringify(cartItems));
                 };
 
                 const formatPrice = (value) => {
@@ -438,6 +436,81 @@ MatomoControl.loadContainers();
                     const safeValue = Number.isFinite(numericValue) ? numericValue : 0;
                     return safeValue.toFixed(2).replace(".", ",");
                 };
+
+                const normalizePrice = (value) => {
+                    const numericValue = Number(value);
+                    return Number.isFinite(numericValue) ? numericValue.toFixed(2) : "0.00";
+                };
+
+                const normalizeCart = (cartItems) => {
+                    if (!Array.isArray(cartItems)) return [];
+
+                    const normalizedItems = new Map();
+                    cartItems.forEach((item) => {
+                        if (!item || typeof item !== "object") return;
+
+                        const name = String(item.name || "").trim();
+                        const numericPrice = Number(item.price);
+                        if (!name || !Number.isFinite(numericPrice) || numericPrice < 0) return;
+
+                        const normalizedPrice = normalizePrice(numericPrice);
+                        const price = Number(normalizedPrice);
+                        const variantCode = String(item.variantCode || "").trim();
+                        const quantity = Math.min(maxCartItemQuantity, Math.max(1, Math.trunc(Number(item.quantity) || 1)));
+                        const key = variantCode ? `variant:${variantCode}` : `product:${name}|${normalizedPrice}`;
+                        const existingItem = normalizedItems.get(key);
+
+                        if (existingItem) {
+                            existingItem.quantity = Math.min(maxCartItemQuantity, existingItem.quantity + quantity);
+                            return;
+                        }
+
+                        if (normalizedItems.size >= maxCartItems) return;
+                        normalizedItems.set(key, { name, price, variantCode, quantity });
+                    });
+
+                    return Array.from(normalizedItems.values());
+                };
+
+                const readCartStorage = () => {
+                    try {
+                        return localStorage.getItem(cartKey);
+                    } catch (error) {
+                        return null;
+                    }
+                };
+
+                const writeCartStorage = (value) => {
+                    try {
+                        localStorage.setItem(cartKey, value);
+                    } catch (error) {
+                        // Ignore storage write failures so the page stays responsive.
+                    }
+                };
+
+                const getCart = () => {
+                    const rawValue = readCartStorage();
+                    if (!rawValue) return [];
+
+                    const parsed = safeParse(rawValue);
+                    if (parsed === null) {
+                        writeCartStorage("[]");
+                        return [];
+                    }
+
+                    const normalizedCart = normalizeCart(parsed);
+                    const normalizedValue = JSON.stringify(normalizedCart);
+                    if (normalizedValue !== rawValue) {
+                        writeCartStorage(normalizedValue);
+                    }
+
+                    return normalizedCart;
+                };
+
+                const saveCart = (cartItems) => {
+                    writeCartStorage(JSON.stringify(normalizeCart(cartItems)));
+                };
+
                 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
                     "&": "&amp;",
                     "<": "&lt;",
