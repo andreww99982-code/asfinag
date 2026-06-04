@@ -489,7 +489,10 @@ MatomoControl.loadContainers();
                         const variantCode = button.dataset.variantCode || "";
 
                         const cartItems = getCart();
-                        const existingItem = cartItems.find((item) => item.name === name && item.price === price);
+                        const existingItem = cartItems.find((item) => {
+                            if (variantCode && item.variantCode) return item.variantCode === variantCode;
+                            return item.name === name && item.price === price;
+                        });
                         if (existingItem) {
                             existingItem.quantity = (Number(existingItem.quantity) || 0) + 1;
                         } else {
